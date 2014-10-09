@@ -82,7 +82,7 @@ setfig();
 % Use a recipe of image processing and statistics to find fiber centers and
 % classify the different phases the image.
 
-I = normalize( dA ) ;
+I = normalize( dA .* A) ;
 
 % Use a Vectorized Fast Radial Transform adopted from:
 %
@@ -202,7 +202,7 @@ setfig()
 
 centers = struct('x', x, 'y', y, 'id', idclass );
 
-nm = 'Test_Original.mat'
+nm = 'Test_Enhanced.mat'
 
 %% Export the Centers
 save( fullfile('_data',nm) , ...

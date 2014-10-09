@@ -82,7 +82,7 @@ setfig();
 % Use a recipe of image processing and statistics to find fiber centers and
 % classify the different phases the image.
 
-I = normalize( dA ) ;
+I = normalize(O);normalize( dA ) ;
 
 % Use a Vectorized Fast Radial Transform adopted from:
 %
