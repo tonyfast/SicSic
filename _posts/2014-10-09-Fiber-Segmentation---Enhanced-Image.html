@@ -489,3 +489,20 @@ fclose(fo)
 
 ##### SOURCE END #####
 --></body></html>
+
+
+<script>
+  // Prepend /assets/ location of images
+  $('.content img').each( function(d){$(this).attr('src', '/SicSic/assets/' + $(this).attr('src') )})
+</script>
+
+<script>
+$( document ).ready(function() {
+  $('.content img').each( function(d,i){
+    $(this)
+      .wrap( '<a href="' + $(this).attr("src") +
+          '" data-title="'+$(this).attr("alt")+'" data-lightbox="post-img"></a>')
+    });
+});
+
+</script>
