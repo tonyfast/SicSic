@@ -1,0 +1,15 @@
+{
+	"header": {
+		"local": "_data/Test_Original.mat",
+		"centers": {
+			"sum": [
+				[1961],
+				[4610],
+				[4024]
+			],
+			"description": "Entry #1 is approximate number of fibers predicted"
+		},
+		"thumbnail": "assets/Test_Original_thumb.png",
+		"alias": "Test_Original.mat"
+	}
+}
