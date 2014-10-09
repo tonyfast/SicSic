@@ -1,0 +1,506 @@
+---
+layout: default
+title: Fiber Segmentation   Adjusted Images
+
+---
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Segmenting Fibers from Cross Sections in CT Data.</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-09"><meta name="DC.source" content="ImageProcessing.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+
+
+
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 0px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Segmenting Fibers from Cross Sections in CT Data.</h1><!--introduction--><p>There are several phases in these images and this script solely focuses on identifying a good guess for the centers of the fiber positions. There are three images from consecutive CT slices.</p><p>Requirements: Image Processing Toolbox</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Import Some Little Widgets</a></li><li><a href="#2">For Presentation</a></li><li><a href="#3">Import the images</a></li><li><a href="#4">Create Exemplar Image</a></li><li><a href="#9">Identify Fiber Centers</a></li><li><a href="#11">Filter out Non-Fiber Phases</a></li><li><a href="#13">Classify centers using highest probabilities</a></li><li><a href="#14">Export the Centers</a></li><li><a href="#15">Export Metadata about the analysis for the website</a></li></ul></div><h2>Import Some Little Widgets<a name="1"></a></h2><p>Normalize and adjust images.</p><pre class="codeinput"><span class="keyword">if</span> ~exist(<span class="string">'normalize'</span>,<span class="string">'var'</span>) | ~exist(<span class="string">'adjust'</span>,<span class="string">'var'</span>)
+    <span class="comment">% GIST raw</span>
+    rawurl = <span class="string">'https://gist.githubusercontent.com/tonyfast/8a2bb4752e0cfc55c99f/raw/f706ad03b824c4e17776d012eefd0ec755d133e5/adjust_normalize.m'</span>
+    s = urlread(  rawurl );
+    eval( s );
+    clear( <span class="string">'rawurl'</span>,<span class="string">'s'</span>)
+<span class="keyword">end</span>
+</pre><h2>For Presentation<a name="2"></a></h2><pre class="codeinput">initfit = @(x)eval(<span class="string">'close all;'</span>)
+setfig = @(x)eval(<span class="string">'xlim([60 380]) ;ylim([520 840]);set(gcf,''Position'', get(0,''ScreenSize''));'</span>)
+</pre><pre class="codeoutput">initfit = 
+    @(x)eval('close all;')
+setfig = 
+    @(x)eval('xlim([60 380]) ;ylim([520 840]);set(gcf,''Position'', get(0,''ScreenSize''));')
+</pre><h2>Import the images<a name="3"></a></h2><pre class="codeinput">lcldir = <span class="string">'_data'</span>;
+ims = dir(fullfile( lcldir, <span class="string">'*.tif'</span> ) );
+
+ct = 0;
+clear <span class="string">A</span>
+<span class="keyword">for</span> im = ims'
+    ct = ct + 1;
+    A(:,:,ct) =  double( imresize(<span class="keyword">...</span>
+        imread( fullfile( lcldir, im.name ) ), .5) );
+<span class="keyword">end</span>
+
+O = A(:,:,2);
+</pre><h2>Create Exemplar Image<a name="4"></a></h2><p>The working image is the average of all three slices in the raw images</p><p>Average All Picture</p><pre class="codeinput">A = mean(A,3);
+</pre><p>Normalize Pixel Values</p><pre class="codeinput">A(:) = normalize(A);
+</pre><p>Adjust histogram</p><pre class="codeinput">Aadjust = adjust(A);
+</pre><p>Difference between original and adjusted image.  It is clear that different phases have different levels of adjustment in the histogram. Could this correspond to different light interactions of the different material phases?</p><pre class="codeinput">dA = Aadjust - A; <span class="comment">% Can the difference in pixel adjustment be related to a physical parameters</span>
+
+<span class="comment">% Plot %%%%%%%%%%</span>
+initfit()
+ax(1) = subplot(1,2,1)
+pcolor( A );
+axis <span class="string">equal</span>; axis <span class="string">tight</span>; colorbar; shading <span class="string">flat</span>;
+title( <span class="string">'Original Image'</span>,<span class="string">'Fontsize'</span>,16 )
+ax(2) = subplot(1,2,2)
+pcolor( dA(:,:,1) );
+axis <span class="string">equal</span>; axis <span class="string">tight</span>; hc = colorbar; shading <span class="string">flat</span>;
+set( get( hc, <span class="string">'Ylabel'</span>), <span class="string">'String'</span>, <span class="string">'Normalized Pixel Adjustment'</span> ,<span class="keyword">...</span>
+    <span class="string">'Rotation'</span>, 270, <span class="string">'FontSize'</span>, 14,<span class="string">'VerticalAlignment'</span>,<span class="string">'Bottom'</span>)
+title( {<span class="string">'Difference After Adjustment'</span>, <span class="keyword">...</span>
+    <span class="string">'Each phase in the image bears a distinct difference after adjustment'</span>} , <span class="keyword">...</span>
+    <span class="string">'Fontsize'</span>,16 )
+linkaxes( ax );
+figure(gcf)
+
+colormap(cbrewer(<span class="string">'div'</span>,<span class="string">'PuOr'</span>,21))
+
+setfig();
+</pre><pre class="codeoutput">ax =
+       173.03       204.03
+ax =
+       173.03       203.03
+ 
+----------------------------------------------------------------------
+The maximum number of colors for table *PuOr* is 11
+The new colormap will be extrapolated from these 11 values
+----------------------------------------------------------------------
+ 
+</pre><img vspace="5" hspace="5" src="ImageProcessing_01.png" alt=""> <h2>Identify Fiber Centers<a name="9"></a></h2><p>Use a recipe of image processing and statistics to find fiber centers and classify the different phases the image.</p><pre class="codeinput">I = normalize( dA ) ;
+
+<span class="comment">% Use a Vectorized Fast Radial Transform adopted from:</span>
+<span class="comment">%</span>
+<span class="comment">% Peter Kovesi</span>
+<span class="comment">% Centre for Exploration Targeting</span>
+<span class="comment">% The University of Western Australia</span>
+<span class="comment">% http://www.csse.uwa.edu.au/~pk/research/matlabfns/</span>
+<span class="comment">% Reference:</span>
+<span class="comment">% Loy, G.  Zelinsky, A.  Fast radial symmetry for detecting points of</span>
+<span class="comment">% interest.  IEEE PAMI, Vol. 25, No. 8, August 2003. pp 959-973.</span>
+
+
+[ I1] = fastradialv( I(:,:,1), 4:6,2);
+
+<span class="comment">% Plot %%%%%%%%%%%%%%%%</span>
+initfit()
+ax(1) = subplot(1,2,1)
+surface( I(:,:,1) ); shading <span class="string">flat</span>; colorbar
+axis <span class="string">equal</span>
+ax(2) = subplot(1,2,2)
+surface( I1(:,:,1) ); shading <span class="string">flat</span>; colorbar
+title({<span class="string">'FRST Transform'</span>,<span class="keyword">...</span>
+    <span class="string">'High Values indicate circular features'</span>}, <span class="keyword">...</span>
+    <span class="string">'FontSize'</span>,16)
+axis <span class="string">equal</span>
+linkaxes( ax );
+colormap <span class="string">hsv</span>
+figure(gcf);
+colormap <span class="string">gray</span>
+setfig();
+</pre><pre class="codeoutput">ax =
+       173.03       203.03
+ax =
+       173.03       203.03
+</pre><img vspace="5" hspace="5" src="ImageProcessing_02.png" alt=""> <p>Find the Maxima after the Fast Symmetric Radial Transform has been applied.</p><pre class="codeinput">maxim = Find_Peaks( I1(:,:,1), <span class="string">'neighborhood'</span>, [ 9 9 1] );
+[ x, y] = find( maxim );
+[ id ] = find( maxim );
+
+initfit()
+ax(1) = subplot(1,2,1)
+pcolor( O  ); shading <span class="string">flat</span>; colorbar
+hold <span class="string">on</span>
+spy( (maxim .* I(:,:,1)) , 10);
+hold <span class="string">off</span>
+axis <span class="string">equal</span>
+ax(2) = subplot(1,2,2)
+plot(y,x,<span class="string">'mo'</span>,<span class="string">'MarkerFaceColor'</span>, .1*ones(1,3) )
+hold <span class="string">on</span>
+[ x2, y2] = deal( y, x);
+b = y2 &gt; 500 &amp; y2 &lt; 860 &amp; x2 &gt; 40 &amp; 42 &lt; 400;
+voronoi(x2(b),y2(b))
+hold <span class="string">off</span>
+title(<span class="string">'Voronoi Tesselation of Potential Fiber Centers'</span>)
+axis <span class="string">ij</span>
+axis <span class="string">equal</span>
+linkaxes( ax );
+colormap <span class="string">hsv</span>
+figure(gcf);
+colormap <span class="string">gray</span>
+
+setfig();
+</pre><pre class="codeoutput">ax =
+       173.04       203.03
+ax =
+       173.04       204.04
+</pre><img vspace="5" hspace="5" src="ImageProcessing_03.png" alt=""> <h2>Filter out Non-Fiber Phases<a name="11"></a></h2><p>The histogram of the pixel values of the peak centers shows three distinct peaks.  We will fit peaks to the histogram then compute the probability of each center's phase.</p><pre class="codeinput">[yy,xx ] = hist(I(id),51);
+initfit()
+p = peakfit( yy, 0, 0, 3, 0 );
+
+
+peaks = struct( <span class="string">'centerid'</span>, p(:,2), <span class="keyword">...</span><span class="comment"> % mean</span>
+    <span class="string">'area'</span>, p(:,3), <span class="keyword">...</span>
+    <span class="string">'widthid'</span>, p(:,4) ); <span class="comment">% Standard deviation</span>
+
+figure(gcf);
+</pre><img vspace="5" hspace="5" src="ImageProcessing_04.png" alt=""> <p>Make the histogram peak algorithm a little more structured &amp; normalize the signal values.  <i>I made this harder than it needs to be, whatever</i>.</p><pre class="codeinput">peaks = setfield( peaks, <span class="string">'center'</span>, <span class="keyword">...</span>
+                interp1( 1 : numel(xx), xx, peaks.centerid ) );
+
+peaks = setfield( peaks, <span class="string">'width'</span>, <span class="keyword">...</span>
+                interp1( 1 : numel(xx), xx, peaks.widthid ) );
+</pre><h2>Classify centers using highest probabilities<a name="13"></a></h2><p>Take the mean and standard deviation from the peak and compute the probiblity of each center existing to each peak using a Gaussian. The Highest probability wins.</p><pre class="codeinput"><span class="comment">% A value that scales to the proportion</span>
+probabilities = exp(bsxfun(@rdivide,<span class="keyword">...</span>
+    -1* (bsxfun( @minus, peaks.center(:)', I(id) ) ).^2,  <span class="keyword">...</span>
+    (2* (peaks.width(:)').^2 ) ));
+
+[~,idclass] = max( probabilities, [],2);
+
+initfit()
+pcolor( O );
+shading <span class="string">flat</span>; axis <span class="string">equal</span>; colorbar;
+hold <span class="string">on</span>
+co = cbrewer(<span class="string">'qual'</span>,<span class="string">'Dark2'</span>,3);
+str = {};
+<span class="keyword">for</span> ii = 1 : 3
+    b = idclass == ii;
+    h(ii) = plot( y(b), x(b), <span class="string">'o'</span>, <span class="keyword">...</span>
+        <span class="string">'MarkerSize'</span>, 8, <span class="keyword">...</span>
+        <span class="string">'MarkerFaceColor'</span>, co(ii,:) );
+    str{ii} = sprintf( <span class="string">'Peak #%i'</span>, ii );
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+figure(gcf)
+legend( h, str, <span class="string">'Fontsize'</span>, 16 )
+colormap <span class="string">gray</span>
+setfig()
+
+centers = struct(<span class="string">'x'</span>, x, <span class="string">'y'</span>, y, <span class="string">'id'</span>, idclass );
+
+nm = <span class="string">'Test_Difference_Adjusted.mat'</span>
+</pre><pre class="codeoutput">nm =
+Test_Difference_Adjusted.mat
+</pre><img vspace="5" hspace="5" src="ImageProcessing_05.png" alt=""> <h2>Export the Centers<a name="14"></a></h2><pre class="codeinput">save( fullfile(<span class="string">'_data'</span>,nm) , <span class="keyword">...</span>
+    <span class="string">'centers'</span> );
+</pre><h2>Export Metadata about the analysis for the website<a name="15"></a></h2><pre class="codeinput">imloc = fullfile(<span class="string">'assets'</span>, regexprep(nm, <span class="string">'.mat'</span>,<span class="string">'_thumb.png'</span>) );
+imwrite(  normalize(imresize(O, .5)), imloc );
+
+header.local = fullfile( <span class="string">'_data'</span>, nm );
+header.thumbnail = imloc;
+header.centers = struct();
+header.centers.sum = accumarray( idclass, ones(size(idclass)), [],@sum );
+header.centers.description = <span class="string">'Entry #1 is approximate number of fibers predicted'</span>;
+
+fo = fopen( fullfile( <span class="string">'_data'</span>, horzcat(nm, <span class="string">'.json'</span>) ) , <span class="string">'w'</span> );
+fwrite( fo, savejson( header));
+fclose(fo)
+</pre><pre class="codeoutput">ans =
+     0
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Segmenting Fibers from Cross Sections in CT Data.
+% There are several phases in these images and this script solely focuses
+% on identifying a good guess for the centers of the fiber positions.
+% There are three images from consecutive CT slices.
+%
+% Requirements: Image Processing Toolbox
+
+%% Import Some Little Widgets
+% Normalize and adjust images.  
+
+if ~exist('normalize','var') | ~exist('adjust','var')
+    % GIST raw
+    rawurl = 'https://gist.githubusercontent.com/tonyfast/8a2bb4752e0cfc55c99f/raw/f706ad03b824c4e17776d012eefd0ec755d133e5/adjust_normalize.m'
+    s = urlread(  rawurl );
+    eval( s );
+    clear( 'rawurl','s')
+end
+
+%% For Presentation
+
+initfit = @(x)eval('close all;')
+setfig = @(x)eval('xlim([60 380]) ;ylim([520 840]);set(gcf,''Position'', get(0,''ScreenSize''));')
+
+%% Import the images
+
+lcldir = '_data';
+ims = dir(fullfile( lcldir, '*.tif' ) );
+
+ct = 0;
+clear A
+for im = ims'
+    ct = ct + 1;
+    A(:,:,ct) =  double( imresize(...
+        imread( fullfile( lcldir, im.name ) ), .5) );
+end
+
+O = A(:,:,2); 
+%% Create Exemplar Image
+% The working image is the average of all three slices in the raw images
+
+%% 
+% Average All Picture
+A = mean(A,3);
+
+%% 
+% Normalize Pixel Values
+A(:) = normalize(A);
+
+%% 
+% Adjust histogram
+Aadjust = adjust(A);
+
+%%
+% Difference between original and adjusted image.  It is clear that
+% different phases have different levels of adjustment in the histogram.
+% Could this correspond to different light interactions of the different
+% material phases?
+
+dA = Aadjust - A; % Can the difference in pixel adjustment be related to a physical parameters
+
+% Plot %%%%%%%%%%
+initfit()
+ax(1) = subplot(1,2,1)
+pcolor( A );
+axis equal; axis tight; colorbar; shading flat;
+title( 'Original Image','Fontsize',16 )
+ax(2) = subplot(1,2,2)
+pcolor( dA(:,:,1) );
+axis equal; axis tight; hc = colorbar; shading flat;
+set( get( hc, 'Ylabel'), 'String', 'Normalized Pixel Adjustment' ,...
+    'Rotation', 270, 'FontSize', 14,'VerticalAlignment','Bottom')
+title( {'Difference After Adjustment', ...
+    'Each phase in the image bears a distinct difference after adjustment'} , ...
+    'Fontsize',16 )
+linkaxes( ax );
+figure(gcf)
+
+colormap(cbrewer('div','PuOr',21))
+
+setfig();
+%% Identify Fiber Centers 
+% Use a recipe of image processing and statistics to find fiber centers and
+% classify the different phases the image.
+
+I = normalize( dA ) ;
+
+% Use a Vectorized Fast Radial Transform adopted from:
+%
+% Peter Kovesi
+% Centre for Exploration Targeting
+% The University of Western Australia
+% http://www.csse.uwa.edu.au/~pk/research/matlabfns/
+% Reference:
+% Loy, G.  Zelinsky, A.  Fast radial symmetry for detecting points of
+% interest.  IEEE PAMI, Vol. 25, No. 8, August 2003. pp 959-973.
+
+
+[ I1] = fastradialv( I(:,:,1), 4:6,2);
+
+% Plot %%%%%%%%%%%%%%%%
+initfit()
+ax(1) = subplot(1,2,1)
+surface( I(:,:,1) ); shading flat; colorbar
+axis equal
+ax(2) = subplot(1,2,2)
+surface( I1(:,:,1) ); shading flat; colorbar
+title({'FRST Transform',...
+    'High Values indicate circular features'}, ...
+    'FontSize',16)
+axis equal
+linkaxes( ax );
+colormap hsv
+figure(gcf);
+colormap gray
+setfig();
+
+%%
+% Find the Maxima after the Fast Symmetric Radial Transform has been
+% applied.
+maxim = Find_Peaks( I1(:,:,1), 'neighborhood', [ 9 9 1] );
+[ x, y] = find( maxim );
+[ id ] = find( maxim );
+
+initfit()
+ax(1) = subplot(1,2,1)
+pcolor( O  ); shading flat; colorbar
+hold on
+spy( (maxim .* I(:,:,1)) , 10);
+hold off
+axis equal
+ax(2) = subplot(1,2,2)
+plot(y,x,'mo','MarkerFaceColor', .1*ones(1,3) )
+hold on
+[ x2, y2] = deal( y, x);
+b = y2 > 500 & y2 < 860 & x2 > 40 & 42 < 400;
+voronoi(x2(b),y2(b))
+hold off
+title('Voronoi Tesselation of Potential Fiber Centers')
+axis ij
+axis equal
+linkaxes( ax );
+colormap hsv
+figure(gcf);
+colormap gray
+
+setfig();
+%% Filter out Non-Fiber Phases
+% The histogram of the pixel values of the peak centers shows three
+% distinct peaks.  We will fit peaks to the histogram then compute the
+% probability of each center's phase.
+
+[yy,xx ] = hist(I(id),51);
+initfit()
+p = peakfit( yy, 0, 0, 3, 0 );
+
+
+peaks = struct( 'centerid', p(:,2), ... % mean
+    'area', p(:,3), ... 
+    'widthid', p(:,4) ); % Standard deviation
+
+figure(gcf);
+%%
+% Make the histogram peak algorithm a little more structured & normalize
+% the signal values.  _I made this harder than it needs to be, whatever_.
+
+peaks = setfield( peaks, 'center', ...
+                interp1( 1 : numel(xx), xx, peaks.centerid ) );
+
+peaks = setfield( peaks, 'width', ...
+                interp1( 1 : numel(xx), xx, peaks.widthid ) );
+
+%% Classify centers using highest probabilities
+% Take the mean and standard deviation from the peak and compute the
+% probiblity of each center existing to each peak using a Gaussian.
+% The Highest probability wins.
+
+% A value that scales to the proportion
+probabilities = exp(bsxfun(@rdivide,...
+    -1* (bsxfun( @minus, peaks.center(:)', I(id) ) ).^2,  ...
+    (2* (peaks.width(:)').^2 ) ));
+
+[~,idclass] = max( probabilities, [],2);
+
+initfit()
+pcolor( O );
+shading flat; axis equal; colorbar;
+hold on
+co = cbrewer('qual','Dark2',3);
+str = {};
+for ii = 1 : 3
+    b = idclass == ii;
+    h(ii) = plot( y(b), x(b), 'o', ...
+        'MarkerSize', 8, ...
+        'MarkerFaceColor', co(ii,:) );
+    str{ii} = sprintf( 'Peak #%i', ii );
+end
+hold off
+figure(gcf)
+legend( h, str, 'Fontsize', 16 )
+colormap gray
+setfig()
+
+centers = struct('x', x, 'y', y, 'id', idclass );
+
+nm = 'Test_Difference_Adjusted.mat'
+
+%% Export the Centers
+save( fullfile('_data',nm) , ...
+    'centers' );
+
+%% Export Metadata about the analysis for the website
+
+imloc = fullfile('assets', regexprep(nm, '.mat','_thumb.png') );
+imwrite(  normalize(imresize(O, .5)), imloc );
+
+header.local = fullfile( '_data', nm );
+header.thumbnail = imloc;
+header.centers = struct();
+header.centers.sum = accumarray( idclass, ones(size(idclass)), [],@sum );
+header.centers.description = 'Entry #1 is approximate number of fibers predicted';
+
+fo = fopen( fullfile( '_data', horzcat(nm, '.json') ) , 'w' );
+fwrite( fo, savejson( header));
+fclose(fo)
+
+##### SOURCE END #####
+--></body></html>
+
+
+<script>
+  // Prepend /assets/ location of images
+  $('.content img').each( function(d){$(this).attr('src', '/SiCSiC/assets/' + $(this).attr('src') )})
+</script>
+
+<script>
+$( document ).ready(function() {
+  $('.content img').each( function(d,i){
+    $(this)
+      .wrap( '<a href="' + $(this).attr("src") +
+          '" data-title="'+$(this).attr("alt")+'" data-lightbox="post-img"></a>')
+    });
+});
+
+</script>

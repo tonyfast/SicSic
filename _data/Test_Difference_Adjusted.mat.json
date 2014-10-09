@@ -1,0 +1,15 @@
+{
+	"header": {
+		"local": "_data/Test_Difference_Adjusted.mat",
+		"centers": {
+			"sum": [
+				[1954],
+				[4177],
+				[4425]
+			],
+			"description": "Entry #1 is approximate number of fibers predicted"
+		},
+		"thumbnail": "assets/Test_Difference_Adjusted_thumb.png",
+		"alias": "Test_Difference_Adjusted.mat"
+	}
+}
