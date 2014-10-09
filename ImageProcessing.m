@@ -18,7 +18,8 @@ end
 
 %% For Presentation
 
-setlim = @(x)eval('xlim([60 380]) ;ylim([520 840]);')
+initfit = @(x)eval('close all;')
+setfig = @(x)eval('xlim([60 380]) ;ylim([520 840]);set(gcf,''Position'', get(0,''ScreenSize''));')
 
 %% Import the images
 
@@ -31,7 +32,6 @@ for im = ims'
     ct = ct + 1;
     A(:,:,ct) =  double( imresize(...
         imread( fullfile( lcldir, im.name ) ), .5) );
-    
 end
 
 O = A(:,:,2); 
@@ -59,6 +59,7 @@ Aadjust = adjust(A);
 dA = Aadjust - A; % Can the difference in pixel adjustment be related to a physical parameters
 
 % Plot %%%%%%%%%%
+initfit()
 ax(1) = subplot(1,2,1)
 pcolor( A );
 axis equal; axis tight; colorbar; shading flat;
@@ -76,7 +77,7 @@ figure(gcf)
 
 colormap(cbrewer('div','PuOr',21))
 
-setlim();
+setfig();
 %% Identify Fiber Centers 
 % Use a recipe of image processing and statistics to find fiber centers and
 % classify the different phases the image.
@@ -97,7 +98,7 @@ I = normalize( dA ) ;
 [ I1] = fastradialv( I(:,:,1), 4:6,2);
 
 % Plot %%%%%%%%%%%%%%%%
-clf
+initfit()
 ax(1) = subplot(1,2,1)
 surface( I(:,:,1) ); shading flat; colorbar
 axis equal
@@ -111,7 +112,7 @@ linkaxes( ax );
 colormap hsv
 figure(gcf);
 colormap gray
-setlim();
+setfig();
 
 %%
 % Find the Maxima after the Fast Symmetric Radial Transform has been
@@ -120,7 +121,7 @@ maxim = Find_Peaks( I1(:,:,1), 'neighborhood', [ 9 9 1] );
 [ x, y] = find( maxim );
 [ id ] = find( maxim );
 
-clf
+initfit()
 ax(1) = subplot(1,2,1)
 pcolor( O  ); shading flat; colorbar
 hold on
@@ -142,7 +143,7 @@ colormap hsv
 figure(gcf);
 colormap gray
 
-setlim();
+setfig();
 %% Filter out Non-Fiber Phases
 % The histogram of the pixel values of the peak centers shows three
 % distinct peaks.  We will fit peaks to the histogram then compute the
@@ -151,6 +152,7 @@ setlim();
 [yy,xx ] = hist(I(id),51);
 p = peakfit( yy, 0, 0, 3, 0 );
 
+initfit()
 peaks = struct( 'centerid', p(:,2), ... % mean
     'area', p(:,3), ... 
     'widthid', p(:,4) ); % Standard deviation
@@ -178,6 +180,7 @@ probabilities = exp(bsxfun(@rdivide,...
 
 [~,idclass] = max( probabilities, [],2);
 
+initfit()
 pcolor( O );
 shading flat; axis equal; colorbar;
 hold on
@@ -194,9 +197,23 @@ hold off
 figure(gcf)
 legend( h, str, 'Fontsize', 16 )
 colormap gray
-setlim()
+setfig()
 
 centers = struct('x', x, 'y', y, 'id', idclass );
 
-save( fullfile('_data','Test_Difference_Adjusted.mat') , ...
+nm = 'Test_Difference_Adjusted.mat'
+
+%% Export the Centers
+save( fullfile('_data',nm) , ...
     'centers' );
+
+%% Export Metadata about the analysis for the website
+
+header.local = fullfile( '_data', nm );
+header.centers = struct();
+header.centers.sum = accumarray( idclass, ones(size(idclass)), [],@sum );
+header.centers.description = 'Entry #1 is approximate number of fibers predicted';
+
+fo = fopen( fullfile( '_data', horzcat(nm, '.json') ) , 'w' );
+fwrite( fo, savejson( header));
+fclose(fo)
