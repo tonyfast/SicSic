@@ -150,9 +150,10 @@ setfig();
 % probability of each center's phase.
 
 [yy,xx ] = hist(I(id),51);
+initfit()
 p = peakfit( yy, 0, 0, 3, 0 );
 
-initfit()
+
 peaks = struct( 'centerid', p(:,2), ... % mean
     'area', p(:,3), ... 
     'widthid', p(:,4) ); % Standard deviation
@@ -209,7 +210,11 @@ save( fullfile('_data',nm) , ...
 
 %% Export Metadata about the analysis for the website
 
+imloc = fullfile('assets', regexprep(nm, '.mat','_thumb.png') );
+imwrite(  normalize(imresize(O, .5)), imloc );
+
 header.local = fullfile( '_data', nm );
+header.thumbnail = imloc;
 header.centers = struct();
 header.centers.sum = accumarray( idclass, ones(size(idclass)), [],@sum );
 header.centers.description = 'Entry #1 is approximate number of fibers predicted';
