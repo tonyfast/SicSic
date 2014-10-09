@@ -4,7 +4,7 @@ title: "My Blog"
 email: you@somewhere.com
 description: >
   Tell us about your site
-baseurl: "/SiCSiC" # replace ``/research-pages`` with the name of the parents repository
+baseurl: "/SicSic" # replace ``/research-pages`` with the name of the parents repository
 url: "tonyfast.com" # replate ``Materials-Informatics-Lab`` with your Github username
 twitter_username: docfast
 disqus: tonyfast
@@ -19,6 +19,6 @@ paginate: 5
 
 gh:
   user: tonyfast
-  repo: SiCSiC
+  repo: SicSic
   # Branch hosting Github pages
   branch: gh-pages
