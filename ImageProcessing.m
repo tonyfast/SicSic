@@ -215,6 +215,7 @@ imwrite(  normalize(imresize(O, .5)), imloc );
 
 header.local = fullfile( '_data', nm );
 header.thumbnail = imloc;
+header.alias = nm;
 header.centers = struct();
 header.centers.sum = accumarray( idclass, ones(size(idclass)), [],@sum );
 header.centers.description = 'Entry #1 is approximate number of fibers predicted';
