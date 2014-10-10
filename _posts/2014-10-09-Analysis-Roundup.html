@@ -1,0 +1,75 @@
+---
+layout: post
+title: An Overview of Current Analysis
+tagline:
+  A discussion on the current fiber center identification in in-plane CT data.
+
+
+sitedata:
+- name: Test_Difference_Adjustedmat
+  seg: ImageProcessing_05.png
+  url: /2014/10/09/Fiber-Segmentation---Adjusted-Images.html
+- name: Test_Enhancedmat
+  seg: ImageProcessing3_05.png
+  url:  /2014/10/09/Fiber-Segmentation---Enhanced-Image.html
+- name: Test_Originalmat
+  url: /2014/10/09/Fiber-Segmentation---Original-Image.html
+  seg: ImageProcessing2_05.png
+---
+
+
+## Overview
+
+Currently, the goal is identify the fiber centers in the following image
+
+{% assign imgsrc = site.data | map:page.sitedata[0]['name'] | map:'header' | map:'thumbnail' | 'first' | prepend:'/' | prepend:site.baseurl %}
+![Original Data to Segment]({{imgsrc}})
+
+### Prior Knowledge
+
+The Image has a few materials phases
+
+* Fiber
+* Matrix
+* Matrix embedded in fibers
+
+  _On a slice these can look fiber like, but over many slices they do not persist
+  like a fiber would_
+
+* Void
+
+Simply adjusting the original Image's histogram provides a brute force way to visualize
+each type of phase.  The adjustments change the grayscale histogram, each faces adjustment
+seems to be characteristic.  Could this be physical?
+
+
+## Coarse Statistics
+<table class="table table-striped">
+  <tr><th>Alias</th><th> Number of Fibers</th></tr>
+{% for dkey in page.sitedata %}
+{% assign data = site.data[dkey['name']] %}
+<tr>
+  <td><a href="{{site.baseurl}}{{dkey['url']}}">{{dkey['name']}}</a>
+  </td>
+  <td>{{data['header']['centers']['sum'] | sort |'first' }}</td>
+</tr>
+{% endfor %}
+</table>
+
+## Segmentations
+{% for dkey in page.sitedata %}
+<tr>
+  <td><img src="{{dkey['seg'] | prepend: '/assets/' | prepend: site.baseurl }}"
+    alt="{{dkey['name']}}"/></td>
+</tr>
+{% endfor %}
+
+## Moving Forward
+
+* This works nicely on a single slice, but we need to check it over many slices.
+* Many slices are required to separated fibers and matrix embedded in fibers.
+* Image Segmentation is looking really, but could be affected by poor data.
+* How can effective manage the large image files required for this collaboration? Flickr?
+
+  _The Image segmentation was performed on a scaled down image.  We could transfer these images
+  to lighten up a bit of the load._
