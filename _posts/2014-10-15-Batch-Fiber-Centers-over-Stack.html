@@ -1,0 +1,417 @@
+---
+layout: default
+title: Batch Fiber Centers over Stack
+
+---
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Stack Analysis</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-15"><meta name="DC.source" content="stackanalysis.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+
+
+
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 0px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Stack Analysis</h1><!--introduction--><p>This script attempts to identify the location of potential fiber centers in a SiC/SiC composite material.</p><p>This script requires</p><div><ul><li><a href="https://github.com/tonyfast/SpatialStatisticsFFT">Spatial Statistics</a></li><li><a href="www.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files-in-matlab-octave">JSON lab</a></li><li><a href="https://gist.github.com/tonyfast/de3d7b841cea38dc40fa">Maximum Gaussian Likelihood estimation</a></li><li><a href="https://gist.github.com/tonyfast/ffc1c2966f96f98cae6a">Fast Radial Feature Detector</a></li><li><a href="https://gist.github.com/tonyfast/d7f6212f86ee004a4d2b">Image Filter Based Peak Finding</a></li></ul></div><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Add the Codes to the local Path</a></li><li><a href="#2">Plotting tools</a></li><li><a href="#3">Functions to Normalize Image information</a></li><li><a href="#4">Find Centers for all Datasets</a></li><li><a href="#7">Appromixate the Local of Fibers</a></li><li><a href="#10">Statistics Based Radius Appromixation</a></li><li><a href="#11">Fast Radial Feature Detector</a></li><li><a href="#14">Cluster Peaks from Different Radii</a></li><li><a href="#15">Identify center type</a></li><li><a href="#16">Plot the Centers and Their Classes</a></li><li><a href="#17">Save information</a></li></ul></div><h2>Add the Codes to the local Path<a name="1"></a></h2><pre class="codeinput">addpath(genpath(<span class="string">'../CleanStats/'</span>))
+addpath <span class="string">oldfrst/</span>
+
+stack.name = <span class="string">'recon_102_2_0_2PIPcure_1p3cm_18keV_ML_1500ms_0to29.tif'</span>;
+stack.path = <span class="string">'_data'</span>;
+
+stack.full = fullfile( stack.path, stack.name );
+
+header = stack;
+header.name = horzcat( stack.name, <span class="string">'.json'</span> );
+header.full = fullfile( header.path, header.name );
+</pre><h2>Plotting tools<a name="2"></a></h2><pre class="codeinput">initplot = @(x)close(<span class="string">'all'</span>);
+cleanplot = @(x)set( gcf, <span class="string">'Position'</span>, get(0, <span class="string">'ScreenSize'</span>));
+</pre><h2>Functions to Normalize Image information<a name="3"></a></h2><pre class="codeinput">normalize = @(A)( A-min(A(:)) ) ./ ( max(A(:)) - min(A(:)) );
+adjust = @(A)reshape(  <span class="keyword">...</span><span class="comment"> back to original shape</span>
+                imadjust( <span class="keyword">...</span><span class="comment"> adjust image</span>
+                        reshape( <span class="keyword">...</span><span class="comment"> flatten to 2-D image</span>
+                                normalize(A), <span class="keyword">...</span><span class="comment"> normalize from zero to one</span>
+                                size(A,1), numel(A)./size(A,1))), <span class="keyword">...</span><span class="comment"> Reshape to 2-D array</span>
+                                size(A) <span class="keyword">...</span><span class="comment"> Reshape back to original size</span>
+                                );
+</pre><h2>Find Centers for all Datasets<a name="4"></a></h2><p>The heavy lifting happens here. This script loops over all the available image slices and detects the fiber centers.  The values are stored to local mat-files for later.</p><p>Once we identify the fiber centers, we will have to center the centers from each slice to determine fiber and non-fiber material.</p><pre class="codeinput">data.image.layers = 30;
+layers.id = -2:2;
+layers.weight = ones(1, numel(layers.id) );
+
+<span class="keyword">for</span> ll = ( max(abs(layers.id)) +1 ) : (data.image.layers-max(abs(layers.id)))
+</pre><pre class="codeinput">    <span class="keyword">for</span> jj = 1 : numel( layers.id )
+        <span class="keyword">if</span> jj == 1
+            A = double( imread( stack.full, ll + layers.id(jj) ) );
+        <span class="keyword">else</span>
+            A(:) =  A + layers.weight(jj) .* double( imread( stack.full, ll + layers.id(jj) ) );
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+</pre><p>Average the images over multiple layers</p><pre class="codeinput">    A(:) = A ./ sum( layers.weight );
+</pre><h2>Appromixate the Local of Fibers<a name="7"></a></h2><p>Use Gaussian Likelihood Estimation to product the fiber phases Once the fiber phases are found ``poi``, their spatial statistics are computed to the approximate the effective radii of the fibers.</p><p>The segmentation is used later to identify centers that could be Fibers.</p><p>Segmentation</p><pre class="codeinput">peaks = segmentprob( A, 251,5 );
+</pre><img vspace="5" hspace="5" src="stackanalysis_01.png" alt=""> <img vspace="5" hspace="5" src="stackanalysis_02.png" alt=""> <p>The below visualization shows the fiber regions and other phases detected.</p><pre class="codeinput">initplot();
+ax(1) = subplot(1,2,1); imshow(normalize(A(:,:,1))');
+ax(2) = subplot(1,2,2); pcolor(normalize(peaks.out.phase)');
+axis(ax(2),<span class="string">'ij'</span>);
+axis(ax(2),<span class="string">'equal'</span>);
+hc = colorbar;
+set( get( hc, <span class="string">'Ylabel'</span>), <span class="string">'String'</span>, <span class="string">'Possiblity of Circle Center'</span>, <span class="string">'Fontsize'</span>,16,<span class="string">'Rotation'</span>,270,<span class="string">'VerticalAlignment'</span>,<span class="string">'Bottom'</span>);
+colormap <span class="string">jet</span>
+linkaxes(ax);
+cleanplot();
+figure(gcf);
+</pre><img vspace="5" hspace="5" src="stackanalysis_03.png" alt=""> <h2>Statistics Based Radius Appromixation<a name="10"></a></h2><pre class="codeinput">initplot();
+
+<span class="comment">% Phase of interest from the segmentation</span>
+poi = 5;
+
+cut = 50;
+[ F , xx ] = SpatialStatsFFT( peaks.out.phase == poi, [], <span class="string">'cutoff'</span>, cut, <span class="keyword">...</span>
+                                                          <span class="string">'shift'</span>, true);
+
+snapnow;
+
+raddist = [ F( xx.values{1} == 0, : ); <span class="keyword">...</span>
+        F( :, xx.values{2} == 0 )']';
+radmean = mean(raddist,2);
+h = plot( -cut: cut, [raddist, radmean], <span class="keyword">...</span>
+                                        <span class="string">'LineWidth'</span>, 3);
+xlabel( <span class="string">'Distance from Fiber Center'</span>, <span class="keyword">...</span>
+                                    <span class="string">'Fontsize'</span>, 16);
+ylabel( <span class="string">'Probability of being inside a fiber'</span>, <span class="keyword">...</span>
+                                    <span class="string">'Fontsize'</span>, 16);
+legend( h, <span class="string">'x-direction'</span>,<span class="string">'y-direction'</span>,<span class="string">'mean'</span>);
+set( h(end), <span class="string">'LineStyle'</span>,<span class="string">':'</span>);
+grid <span class="string">on</span>
+cleanplot();
+figure(gcf);
+</pre><img vspace="5" hspace="5" src="stackanalysis_04.png" alt=""> <img vspace="5" hspace="5" src="stackanalysis_05.png" alt=""> <h2>Fast Radial Feature Detector<a name="11"></a></h2><p>The FRFD detectors circular features of a set of prescribed radii to look for.  The output image is a transform of the original image.  From the transform, centers can be found.</p><pre class="codeinput"><span class="comment">% These radii were chosen using the previous plot</span>
+radii = [9 : 12];
+
+T = fastradialv( normalize(A), radii ,2 ); <span class="comment">% the third dimension in t corresponds to the input radii</span>
+<span class="comment">% Average over each radii</span>
+T = mean(T,3);
+</pre><p>Illustrate the FRFD</p><pre class="codeinput">initplot()
+ax(1) = subplot(1,2,1); imshow(normalize(A(:,:,1))');
+ax(2) = subplot(1,2,2); pcolor(normalize(T)');
+axis(ax(2),<span class="string">'ij'</span>);
+axis(ax(2),<span class="string">'equal'</span>);
+hc = colorbar;
+set( get( hc, <span class="string">'Ylabel'</span>), <span class="string">'String'</span>, <span class="string">'Possiblity of Circle Center'</span>, <span class="string">'Fontsize'</span>,16,<span class="string">'Rotation'</span>,270,<span class="string">'VerticalAlignment'</span>,<span class="string">'Bottom'</span>);
+colormap <span class="string">jet</span>
+linkaxes(ax);
+cleanplot();
+figure(gcf);
+</pre><img vspace="5" hspace="5" src="stackanalysis_06.png" alt=""> <pre class="codeinput">close <span class="string">all</span>;
+maxim = zeros( size( T ) );
+<span class="comment">% Find peaks for each radius</span>
+<span class="keyword">for</span> ii = 1 : size( T, 3)
+    maxim(:,:,ii) = Find_Peaks( T(:,:,ii) , <span class="string">'neighborhood'</span>, [ 11 11 1], <span class="string">'diff'</span>, true );
+<span class="keyword">end</span>
+</pre><h2>Cluster Peaks from Different Radii<a name="14"></a></h2><pre class="codeinput">[x,y] = find( maxim );
+
+<span class="comment">% ``XX`` is the output</span>
+XX  = simplecluster( [x,y], 4 );
+[ xf yf ] =deal( XX(:,1), XX(:,2));
+</pre><h2>Identify center type<a name="15"></a></h2><pre class="codeinput">I = sub2ind( size( A ), round( XX(:,1) ), round( XX(:,2) ) );
+<span class="comment">% Precomputed phases</span>
+phase = peaks.out.phase( I );
+XX(:,3) = phase;
+</pre><h2>Plot the Centers and Their Classes<a name="16"></a></h2><p>Overlay centers and their their class onto the original image</p><pre class="codeinput">initplot();
+co = flipud( cbrewer(<span class="string">'qual'</span>,<span class="string">'Paired'</span>,numel(radii)+10 ) );
+figure
+imshow( normalize(A) );
+hold <span class="string">on</span>
+<span class="keyword">for</span> ii = unique( phase )'
+    b = phase == ii;
+    plot( yf(b), xf(b), <span class="string">'ko'</span>, <span class="string">'MarkerFaceColor'</span>, co(ii,:) );
+<span class="keyword">end</span>
+
+colormap(gray);
+hold <span class="string">off</span>
+cleanplot();
+</pre><pre class="codeoutput"> 
+----------------------------------------------------------------------
+The maximum number of colors for table *Paired* is 12
+The new colormap will be extrapolated from these 12 values
+----------------------------------------------------------------------
+ 
+</pre><img vspace="5" hspace="5" src="stackanalysis_07.png" alt=""> <h2>Save information<a name="17"></a></h2><pre class="codeinput">description = <span class="string">'Created from stackanalysis.m'</span>;
+layer = ll;
+<span class="keyword">return</span>
+</pre><pre class="codeinput"><span class="comment">% Save the data locally</span>
+<span class="comment">% save( fullfile('_data','centers', sprintf('clayer_%i.mat', ll ) ), 'XX', 'description', 'layer' );</span>
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Stack Analysis
+% This script attempts to identify the location of potential fiber centers
+% in a SiC/SiC composite material.
+%
+% This script requires
+%
+% * <https://github.com/tonyfast/SpatialStatisticsFFT Spatial Statistics> 
+% * <www.mathworks.com/matlabcentral/fileexchange/33381-jsonlabREPLACE_WITH_DASH_DASHa-toolbox-to-encode-decode-json-files-in-matlab-octave JSON lab>
+% * <https://gist.github.com/tonyfast/de3d7b841cea38dc40fa Maximum Gaussian Likelihood estimation>
+% * <https://gist.github.com/tonyfast/ffc1c2966f96f98cae6a Fast Radial Feature Detector>
+% * <https://gist.github.com/tonyfast/d7f6212f86ee004a4d2b Image Filter Based Peak Finding>
+%
+
+%% Add the Codes to the local Path
+addpath(genpath('../CleanStats/'))
+addpath oldfrst/
+
+stack.name = 'recon_102_2_0_2PIPcure_1p3cm_18keV_ML_1500ms_0to29.tif';
+stack.path = '_data';
+
+stack.full = fullfile( stack.path, stack.name );
+
+header = stack;
+header.name = horzcat( stack.name, '.json' );
+header.full = fullfile( header.path, header.name );
+
+%% Plotting tools
+
+initplot = @(x)close('all');
+cleanplot = @(x)set( gcf, 'Position', get(0, 'ScreenSize'));
+
+%% Functions to Normalize Image information
+
+normalize = @(A)( A-min(A(:)) ) ./ ( max(A(:)) - min(A(:)) );
+adjust = @(A)reshape(  ... back to original shape
+                imadjust( ... adjust image
+                        reshape( ... flatten to 2-D image
+                                normalize(A), ... normalize from zero to one
+                                size(A,1), numel(A)./size(A,1))), ... Reshape to 2-D array
+                                size(A) ... Reshape back to original size
+                                );
+
+%% Find Centers for all Datasets
+% The heavy lifting happens here.
+% This script loops over all the available image slices and detects the
+% fiber centers.  The values are stored to local mat-files for later.
+%
+% Once we identify the fiber centers, we will have to center the centers
+% from each slice to determine fiber and non-fiber material.
+
+data.image.layers = 30;
+layers.id = -2:2;
+layers.weight = ones(1, numel(layers.id) );
+
+for ll = ( max(abs(layers.id)) +1 ) : (data.image.layers-max(abs(layers.id)))
+    for jj = 1 : numel( layers.id )
+        if jj == 1
+            A = double( imread( stack.full, ll + layers.id(jj) ) );
+        else
+            A(:) =  A + layers.weight(jj) .* double( imread( stack.full, ll + layers.id(jj) ) );
+        end
+    end
+%%
+% Average the images over multiple layers
+    A(:) = A ./ sum( layers.weight );
+
+
+%% Appromixate the Local of Fibers
+% Use Gaussian Likelihood Estimation to product the fiber phases
+% Once the fiber phases are found ``poi``, their spatial statistics are
+% computed to the approximate the effective radii of the fibers.
+%
+% The segmentation is used later to identify centers that could be Fibers.
+%
+
+%%
+% Segmentation
+peaks = segmentprob( A, 251,5 );
+
+%%
+% The below visualization shows the fiber regions and other phases
+% detected.
+
+initplot();
+ax(1) = subplot(1,2,1); imshow(normalize(A(:,:,1))');
+ax(2) = subplot(1,2,2); pcolor(normalize(peaks.out.phase)');
+axis(ax(2),'ij');
+axis(ax(2),'equal');
+hc = colorbar;
+set( get( hc, 'Ylabel'), 'String', 'Possiblity of Circle Center', 'Fontsize',16,'Rotation',270,'VerticalAlignment','Bottom');
+colormap jet
+linkaxes(ax);
+cleanplot();
+figure(gcf);
+
+%% Statistics Based Radius Appromixation
+
+initplot();
+
+% Phase of interest from the segmentation
+poi = 5; 
+
+cut = 50;
+[ F , xx ] = SpatialStatsFFT( peaks.out.phase == poi, [], 'cutoff', cut, ...
+                                                          'shift', true);
+
+snapnow;
+
+raddist = [ F( xx.values{1} == 0, : ); ...
+        F( :, xx.values{2} == 0 )']';
+radmean = mean(raddist,2);
+h = plot( -cut: cut, [raddist, radmean], ...
+                                        'LineWidth', 3);
+xlabel( 'Distance from Fiber Center', ...
+                                    'Fontsize', 16);
+ylabel( 'Probability of being inside a fiber', ...
+                                    'Fontsize', 16);
+legend( h, 'x-direction','y-direction','mean');
+set( h(end), 'LineStyle',':');
+grid on
+cleanplot();
+figure(gcf);
+
+%% Fast Radial Feature Detector
+% The FRFD detectors circular features of a set of prescribed radii to look
+% for.  The output image is a transform of the original image.  From the
+% transform, centers can be found.
+
+% These radii were chosen using the previous plot
+radii = [9 : 12];
+
+T = fastradialv( normalize(A), radii ,2 ); % the third dimension in t corresponds to the input radii
+% Average over each radii
+T = mean(T,3);
+
+
+%%
+% Illustrate the FRFD
+
+initplot()
+ax(1) = subplot(1,2,1); imshow(normalize(A(:,:,1))');
+ax(2) = subplot(1,2,2); pcolor(normalize(T)');
+axis(ax(2),'ij');
+axis(ax(2),'equal');
+hc = colorbar;
+set( get( hc, 'Ylabel'), 'String', 'Possiblity of Circle Center', 'Fontsize',16,'Rotation',270,'VerticalAlignment','Bottom');
+colormap jet
+linkaxes(ax); 
+cleanplot();
+figure(gcf);
+
+%%
+close all;
+maxim = zeros( size( T ) );
+% Find peaks for each radius
+for ii = 1 : size( T, 3)
+    maxim(:,:,ii) = Find_Peaks( T(:,:,ii) , 'neighborhood', [ 11 11 1], 'diff', true );
+end
+%% Cluster Peaks from Different Radii
+
+[x,y] = find( maxim );
+
+% ``XX`` is the output
+XX  = simplecluster( [x,y], 4 );   
+[ xf yf ] =deal( XX(:,1), XX(:,2));
+
+%% Identify center type
+I = sub2ind( size( A ), round( XX(:,1) ), round( XX(:,2) ) );
+% Precomputed phases
+phase = peaks.out.phase( I );
+XX(:,3) = phase;
+
+%% Plot the Centers and Their Classes
+% Overlay centers and their their class onto the original image
+initplot();
+co = flipud( cbrewer('qual','Paired',numel(radii)+10 ) );
+figure
+imshow( normalize(A) );
+hold on
+for ii = unique( phase )'
+    b = phase == ii;
+    plot( yf(b), xf(b), 'ko', 'MarkerFaceColor', co(ii,:) );
+end
+
+colormap(gray);
+hold off
+cleanplot();
+%% Save information
+
+description = 'Created from stackanalysis.m';
+layer = ll;
+return
+%%
+%
+
+% Save the data locally
+% save( fullfile('_data','centers', sprintf('clayer_%i.mat', ll ) ), 'XX', 'description', 'layer' );
+end
+##### SOURCE END #####
+--></body></html>
+<script>
+  // Prepend /assets/ location of images
+  $('.content img').each( function(d){$(this).attr('src', '/SicSic/assets/' + $(this).attr('src') )})
+</script>
+
+<script>
+$( document ).ready(function() {
+  $('.content img').each( function(d,i){
+    $(this)
+      .wrap( '<a href="' + $(this).attr("src") +
+          '" data-title="'+$(this).attr("alt")+'" data-lightbox="post-img"></a>')
+    });
+});
+
+</script>
