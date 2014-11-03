@@ -1,0 +1,329 @@
+---
+layout: default
+title: Continuous Labelling of Fiber Centers
+tagline: >
+    Create fiber indices over contiguous layers using a nearest neighbor criteria.
+---
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Identifying FIBER Centers from its potential candidates</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-11-03"><meta name="DC.source" content="CombineLayers.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+
+
+
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 0px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Identifying FIBER Centers from its potential candidates</h1><!--introduction--><p>Currently, potential fibers centers have been identified.  The next step is to assign when a center is or is not a fiber.</p><p>Fibers will be defined as potential fiber centers in contguous layers are found nearby to each other.  We assume that in between layers a fiber center an not deviate much.</p><p>Some potential fiber centers are actually a pyrolytic phase, these can be filtered out in the same way.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Load in Potential Fiber Centers</a></li><li><a href="#2">Remove a Small Section for Testing</a></li><li><a href="#3">Distance Matrix Function</a></li><li><a href="#4">Naive Labeling</a></li><li><a href="#5">Labelling Script</a></li><li><a href="#6">Plot Indexed Fiber Positions</a></li></ul></div><h2>Load in Potential Fiber Centers<a name="1"></a></h2><p>From ``stackanalysis.m``, potential fiber centers have been identified for the TIF stack ``recon_102_2_0_2PIPcure_1p3cm_18keV_ML_1500ms_0to29.tif``.</p><pre class="codeinput">centers = dir( <span class="string">'_data/centers/*.mat'</span> );
+
+X = [];
+<span class="keyword">for</span> ii = 1 : numel( centers )
+    load( fullfile( <span class="string">'_data'</span>, <span class="string">'centers'</span>, centers(ii).name ) );
+
+    X = [X; horzcat( XX, layer * ones( size(XX,1), 1) )];
+<span class="keyword">end</span>
+</pre><h2>Remove a Small Section for Testing<a name="2"></a></h2><p>This subvolume tests the efficacy of the current fiber labelling approach.  Using a small window it is easier to visualize the results</p><pre class="codeinput"> w = [ 300 ,500; 600, 700]
+b = X(:,1) &gt; w(1,1) &amp; X(:,1) &lt; w(1,2) &amp; <span class="keyword">...</span>
+    X(:,2) &gt; w(2,1) &amp; X(:,2) &lt; w(2,2) ;
+plot3( X(b,1), X(b,2), X(b,4),<span class="string">'k.'</span>)
+title(<span class="string">' Subvolume Containing Potential Fiber Centers'</span>)
+axis <span class="string">equal</span>
+axis <span class="string">tight</span>
+grid <span class="string">on</span>
+set( gcf, <span class="string">'Position'</span>, get(0, <span class="string">'ScreenSize'</span>))
+figure(gcf)
+</pre><pre class="codeoutput">
+w =
+
+   300   500
+   600   700
+
+</pre><img vspace="5" hspace="5" src="CombineLayers_01.png" alt=""> <h2>Distance Matrix Function<a name="3"></a></h2><p>Computes the distance between "Fiber Centers" in between a reference layer and the following layer.</p><p><a href="http://en.wikipedia.org/wiki/Distance_matrix">p_2 norm</a></p><pre class="codeinput">dist = @(X,Y)sqrt( <span class="keyword">...</span>
+    bsxfun( @minus, X(:,1), Y(:,1)' ).^2 +  <span class="keyword">...</span>
+    bsxfun( @minus, X(:,2), Y(:,2)' ).^2 );
+</pre><h2>Naive Labeling<a name="4"></a></h2><div><ol><li>Start on First Layer, initialize indices</li><li>Search for nearest centers in next layer, append prior index.</li><li>Fibers are indexed from a reference layer to the subsequent layer.</li></ol></div><h2>Labelling Script<a name="5"></a></h2><pre class="codeinput"><span class="comment">% Euclidean cutoff distance</span>
+cut = 4;
+
+<span class="comment">% Layers where fiber centers have been found</span>
+layers = unique( X(:,end));
+<span class="comment">% New varaible for the indexed fibers</span>
+XX = horzcat( X( b, :) , <span class="keyword">...</span>
+                zeros( size( X( b, :) , 1), 1 ) );
+<span class="comment">% Column where the indices go</span>
+ncol = size(XX,2);
+
+<span class="comment">% Loop over each layer</span>
+<span class="keyword">for</span> ii = [layers'; <span class="keyword">...</span><span class="comment">.</span>
+          1: numel(layers)]
+
+      <span class="comment">% Reference Layer</span>
+      l1 = XX(:,ncol - 1) == ii(1);
+      <span class="comment">% Next Layer</span>
+      l2 = XX(:,ncol - 1) == ( ii(1) + 1 );
+
+      <span class="comment">% Points in Reference Layer</span>
+      X1 = XX( l1, 1:2);
+      <span class="comment">% Points in the Next Layer</span>
+      X2 = XX( l2, 1:2);
+      D = dist( X1, X2);
+
+      <span class="comment">% Near fiber on next layer relative to the reference layer</span>
+      [v,id] = min( D, [],1 );
+
+      <span class="comment">% Initialize the indices on the first layer</span>
+      <span class="keyword">if</span> ii(2) == 1
+          XX( l1 , ncol ) = 1 : sum(l1);
+      <span class="keyword">end</span>
+
+      <span class="comment">% Previous indices</span>
+      prev = XX( l1 , ncol );
+      fl2 = find( l2 );
+      <span class="comment">% Remap prior indices onto the new ones</span>
+      XX( fl2( v &lt; cut) , ncol ) = prev(id( v &lt; cut));
+
+      <span class="comment">% FIrst Pass INitialize indices</span>
+<span class="keyword">end</span>
+</pre><h2>Plot Indexed Fiber Positions<a name="6"></a></h2><pre class="codeinput">clear <span class="string">h</span>
+
+<span class="comment">% Unique indices</span>
+unind = setdiff( unique( XX(:,ncol) )' ,<span class="keyword">...</span><span class="comment"> ignore zero index</span>
+                        0 );
+
+co = rand(100,3);
+<span class="keyword">for</span> ii = [ unind; <span class="keyword">...</span>
+           1 : numel( unind ) ]
+    b = XX(:, ncol ) == ii(1);
+
+    C = XX( b, [1 2 4] );
+    C = sortrows( C, 3 );
+    h(ii) = plot3( C(:,1), C(:,2), C(:,3), <span class="string">'ko'</span>, <span class="keyword">...</span>
+                                           <span class="string">'MarkerFaceColor'</span>, co( ii(2), : ), <span class="keyword">...</span>
+                                           <span class="string">'MarkerSize'</span>, 16 );
+    <span class="keyword">if</span> ii(2) == 1
+        hold <span class="string">on</span>;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+hold <span class="string">off</span>;
+grid <span class="string">on</span>
+
+xlabel(<span class="string">'Voxels'</span>, <span class="string">'Fontsize'</span>,16)
+ylabel(<span class="string">'Voxels'</span>, <span class="string">'Fontsize'</span>,16)
+zlabel(<span class="string">'Layers'</span>, <span class="string">'Fontsize'</span>,16)
+daspect( [ 1 1 .25])
+title( <span class="string">'Color Indentifies Continuous Fibers'</span>,<span class="string">'Fontsize'</span>, 16);
+set( gcf, <span class="string">'Position'</span>, get(0, <span class="string">'ScreenSize'</span>))
+figure(gcf)
+</pre><img vspace="5" hspace="5" src="CombineLayers_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Identifying FIBER Centers from its potential candidates
+%
+% Currently, potential fibers centers have been identified.  The next step
+% is to assign when a center is or is not a fiber.
+%
+% Fibers will be defined as potential fiber centers in contguous layers are
+% found nearby to each other.  We assume that in between layers a fiber
+% center an not deviate much.
+%
+% Some potential fiber centers are actually a pyrolytic phase, these can be
+% filtered out in the same way.
+
+%% Load in Potential Fiber Centers
+%
+% From ``stackanalysis.m``, potential fiber centers have been identified
+% for the TIF stack
+% ``recon_102_2_0_2PIPcure_1p3cm_18keV_ML_1500ms_0to29.tif``.
+
+centers = dir( '_data/centers/*.mat' );
+
+X = [];
+for ii = 1 : numel( centers )
+    load( fullfile( '_data', 'centers', centers(ii).name ) );
+    
+    X = [X; horzcat( XX, layer * ones( size(XX,1), 1) )];
+end
+
+%%  Remove a Small Section for Testing
+% This subvolume tests the efficacy of the current fiber labelling
+% approach.  Using a small window it is easier to visualize the results
+
+ w = [ 300 ,500; 600, 700]
+b = X(:,1) > w(1,1) & X(:,1) < w(1,2) & ...
+    X(:,2) > w(2,1) & X(:,2) < w(2,2) ;
+plot3( X(b,1), X(b,2), X(b,4),'k.')
+title(' Subvolume Containing Potential Fiber Centers')
+axis equal 
+axis tight
+grid on
+set( gcf, 'Position', get(0, 'ScreenSize'))
+figure(gcf)
+
+%% Distance Matrix Function
+% Computes the distance between "Fiber Centers" in between a reference
+% layer and the following layer.
+%
+% <http://en.wikipedia.org/wiki/Distance_matrix p_2 norm>
+
+dist = @(X,Y)sqrt( ...
+    bsxfun( @minus, X(:,1), Y(:,1)' ).^2 +  ...
+    bsxfun( @minus, X(:,2), Y(:,2)' ).^2 );
+
+
+%% Naive Labeling
+%
+% # Start on First Layer, initialize indices
+% # Search for nearest centers in next layer, append prior index.
+% # Fibers are indexed from a reference layer to the subsequent layer.
+
+%% Labelling Script
+
+% Euclidean cutoff distance
+cut = 4;
+
+% Layers where fiber centers have been found
+layers = unique( X(:,end));
+% New varaible for the indexed fibers
+XX = horzcat( X( b, :) , ...
+                zeros( size( X( b, :) , 1), 1 ) );
+% Column where the indices go
+ncol = size(XX,2);
+
+% Loop over each layer
+for ii = [layers'; ....
+          1: numel(layers)]    
+      
+      % Reference Layer
+      l1 = XX(:,ncol - 1) == ii(1);
+      % Next Layer
+      l2 = XX(:,ncol - 1) == ( ii(1) + 1 );
+      
+      % Points in Reference Layer
+      X1 = XX( l1, 1:2);
+      % Points in the Next Layer
+      X2 = XX( l2, 1:2);
+      D = dist( X1, X2);
+      
+      % Near fiber on next layer relative to the reference layer
+      [v,id] = min( D, [],1 );
+      
+      % Initialize the indices on the first layer
+      if ii(2) == 1
+          XX( l1 , ncol ) = 1 : sum(l1);
+      end
+      
+      % Previous indices
+      prev = XX( l1 , ncol );
+      fl2 = find( l2 );
+      % Remap prior indices onto the new ones
+      XX( fl2( v < cut) , ncol ) = prev(id( v < cut));
+      
+      % FIrst Pass INitialize indices 
+end
+
+
+%% Plot Indexed Fiber Positions
+
+clear h
+
+% Unique indices 
+unind = setdiff( unique( XX(:,ncol) )' ,... ignore zero index
+                        0 );
+
+co = rand(100,3);
+for ii = [ unind; ...
+           1 : numel( unind ) ]
+    b = XX(:, ncol ) == ii(1);
+    
+    C = XX( b, [1 2 4] );
+    C = sortrows( C, 3 );
+    h(ii) = plot3( C(:,1), C(:,2), C(:,3), 'ko', ...
+                                           'MarkerFaceColor', co( ii(2), : ), ...
+                                           'MarkerSize', 16 );
+    if ii(2) == 1
+        hold on;
+    end
+end
+hold off;
+grid on
+
+xlabel('Voxels', 'Fontsize',16)
+ylabel('Voxels', 'Fontsize',16)
+zlabel('Layers', 'Fontsize',16)
+daspect( [ 1 1 .25])
+title( 'Color Indentifies Continuous Fibers','Fontsize', 16);
+set( gcf, 'Position', get(0, 'ScreenSize'))
+figure(gcf)
+%%
+##### SOURCE END #####
+--></body></html>
+<script>
+  // Prepend /assets/ location of images
+  $('.content img').each( function(d){$(this).attr('src', '/SicSic/assets/' + $(this).attr('src') )})
+</script>
+
+<script>
+$( document ).ready(function() {
+  $('.content img').each( function(d,i){
+    $(this)
+      .wrap( '<a href="' + $(this).attr("src") +
+          '" data-title="'+$(this).attr("alt")+'" data-lightbox="post-img"></a>')
+    });
+});
+
+</script>
